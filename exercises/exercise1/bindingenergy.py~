@@ -1,0 +1,42 @@
+import matplotlib.pyplot as plt
+from numpy import loadtxt
+from pylab import *
+plt.rc('text', usetex=True)
+
+z,a,be=loadtxt('bedata.dat',unpack=True,usecols=[0,1,2])
+
+#plot Binding Energies 
+plot(a,be/a,linestyle='none',marker='o')
+
+xlabel('Nucleons (A)')
+ylabel('B.E. (MeV/A)')
+title('Binding Energy of Nuclei')
+savefig("expBE.png")
+show()
+
+#Create plots for Oxygen, Calcium, Nickel, Tin, and lead
+oxygen=[]
+oxygenneutron=[]
+calcium=[]
+calciumneutron=[]
+nickel=[]
+nickelneutron=[]
+def separatione(neutron=[],nuceli=[],protonnum=0):
+    prevbe=0
+    for x,y,w in zip(z,a,be):
+        if x==protonnum:
+            nuceli.append(w-prevbe)
+            neutron.append(y)
+            prevbe=w
+    neutron.pop(0)
+    nuceli.pop(0)
+    return
+separatione(oxygenneutron,oxygen,8)
+plt.plot(oxygenneutron,oxygen)
+plt.xlabel(r"\Tex\Neutrons")
+plt.ylabel('S')
+plt.title('Binding Energy of Nuclei')
+plt.savefig("separationenergy_oxygen.png")
+plt.show()
+    
+    
