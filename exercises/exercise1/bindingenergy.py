@@ -39,6 +39,9 @@ brownbe=[]
 brownliquiddrop(a,z,brownbe)
 plot(a,brownbe/a,linestyle='none',marker='.',alpha=.5, color='r',label='A.Brown Liquid Drop')
 legend(loc='upper right')
+xlabel('Nucleons (A)')
+ylabel('B.E. (MeV/A)')
+title('Binding Energy of Nuclei')
 savefig("Liquiddrop.png")
 show()
 
