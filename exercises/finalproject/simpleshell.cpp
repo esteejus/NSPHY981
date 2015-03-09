@@ -1,129 +1,113 @@
 #include <iostream>
 #include <armadillo>
-
+#include <stdio.h>
 
 using namespace std;
 using namespace arma;
 
-void mscheme(int,int,int);
+void mscheme(int,int &,int, mat &);
 unsigned nChoosek(unsigned,unsigned);
 bool equal(rowvec,rowvec);
 void onebody(rowvec,mat,int,mat&,int&);
 void twobody(rowvec,mat,int,int,mat&,int&);
+void printCombination(int*, int, int, int);
+void combinationUtil(int*, int*, int, int,int, int, int, rowvec &sd,int &counter,mat &temp);
 
 int main(){
-  
-  
-  mat a (3,4);
-  a(0,0)=1;
-  a(0,1)=2;
-  a(0,2)=3;
-  a(0,3)=4;
-
-  a(1,0)=1;
-  a(1,1)=2;
-  a(1,2)=5;
-  a(1,3)=6;
-
-  a(2,0)=3;
-  a(2,1)=4;
-  a(2,2)=5;
-  a(2,3)=6;
-  
-  /*
-  mat a(2,2);
-  a(0,0)=1;
-  a(0,1)=2;
-  a(1,0)=3;
-  a(1,1)=4;
-  */
-
-  //a.print();
-   
+     
  int npart=4;
  int splevels=6;
- int  nsd=3;   
- mat hamilt(3,3);
-  hamilt.zeros();
-  mscheme(npart,0,splevels);
-  for(int i=0;i<nsd;i++){
-       rowvec wf = a.row(i);//wave function(SD) for bra
-              onebody(wf,a,nsd,hamilt,i);
-       twobody(wf,a,nsd,splevels,hamilt,i);
+ int nsd=nChoosek(splevels,npart);
+ mat sd(nsd,npart);//all possible slater det.
+ mscheme(npart,nsd,splevels,sd);//sorts only pairs
+ mat hamilt(nsd,nsd);
+ hamilt.zeros();
+ for(int i=0;i<nsd;i++){
+   rowvec wf = sd.row(i);//wave function(SD) for bra
+   onebody(wf,sd,nsd,hamilt,i);
+   twobody(wf,sd,nsd,splevels,hamilt,i);
+   
+ }  
+  hamilt.print();
+  
 
-  }  
-    hamilt.print();
-
-  mat v = linspace<mat>(1,4,4);
-  /*
-  for(int k=0;k<nsd;k++){
-  for(int i=0;i<splevels;i++){
-    for(int j=0;j<4;j++){
-     
-      if(v(4-j)<splevels) v(4-j)+=1;
-
-    }
-  }
-  }
-  v.print();
-  */ 
   return 0 ;
   
 }
 
 
-void mscheme(int npart,int mvalue,int splevels){ 
-  int nsd=nChoosek(splevels,npart);
-   mat tempsd(nsd,npart);//all slater determinents 
-   int pos = npart-1;//position for switching particle positions
-   tempsd.zeros(); 
-   bool resum = false;
-   for(int i=0;i<nsd;i++){
-     for(int j=0;j<npart;j++){      
-       
+void mscheme(int npart,int &nsd,int splevels, mat &tempsd){
+  int arr[splevels];  
+  for(int k=1;k<=splevels;k++)arr[k-1]=k;  
+  int z=0;
+  int data[splevels];
+  nsd=nChoosek(splevels,npart);
+  mat tempsd1(nsd,npart);//all possible sd
+  rowvec sd(npart);
+  //run once to get sd number , z here.
+  combinationUtil(arr,data,0,splevels-1,0,npart,nsd,sd,z,tempsd1); 
+  nsd=z;//set number of sd to total counted states availible with pairing
+   z=0;//set counter back to 0 
+ tempsd.zeros(); 
+ combinationUtil(arr,data,0,splevels-1,0,npart,nsd,sd,z,tempsd); 
+ //sd.print(); 
+ tempsd.print();
+ 
 
-       if(i==0)tempsd(i,j)=j+1;//initial filling
-       
-       else{
-       if(j!=pos)tempsd(i,j)=tempsd(i-1,j);
-       else if(j>pos && resum==true){
-	 tempsd(i,j)=tempsd(i,j-1)+1;
-	 if(j==npart){
-	   resum=false;
-	   pos=npart-1;
-	 }
+} 
+
+
+   /* arr[]  ---> Input Array
+   data[] ---> Temporary array to store current combination
+   start & end ---> Staring and Ending indexes in arr[]
+   index  ---> Current index in data[]
+   r ---> Size of a combination to be printed */
+void combinationUtil(int arr[], int data[], int start, int end, int index, int r, int nsd, rowvec &sd,int &counter,mat &tempwf)
+   {
+     // Current combination is ready to be printed, print it
+     if(index==r){
+	 if (index == r)
+	   {
+	     
+	     
+	     for (int j=0; j<r; j++){
+	     
+	       if((j+1)%2==0 && data[j]==data[j-1]+1 && data[j]%2==0){
+		 sd(j)=data[j];
+		 sd(j-1)=data[j-1];
+		 // cout<<"counter"<<counter<<endl;
+	       }
+	       else if((j+1)%2 && !(data[j]==data[j-1]+1)){
+		 sd.zeros();
+	       }
+	       int product=1;
+	       for(int l=0;l<r;l++){
+		 product=sd(l)*product;
+	       }
+		 if(product!=0){
+		   counter++;
+		   tempwf.insert_rows(counter-1,sd);
+		   //	   sd.print();
+		 }
+	       
+	     }
+	     
+	     //printf("\n");
+	     sd.print();
+	     return;
+	   }	 
+     }
+     
+     // replace index with all possible elements. The condition
+     // "end-i+1 >= r-index" makes sure that including one element
+     // at index will make a combination with remaining elements
+     // at remaining positions
+     for (int i=start; i<=end && end-i+1 >= r-index; i++)
+       {
+	 data[index] = arr[i];
+	 combinationUtil(arr, data, i+1, end, index+1, r,nsd,sd,counter,tempwf);
        }
-	 else{
-	 if(tempsd(i-1,j)<splevels)tempsd(i,j)=tempsd(i-1,j)+1;
-	 else{
-	   if(tempsd(i-1,j-1)+1!=tempsd(i-1,j)){
-	     tempsd(i,j-1)=tempsd(i-1,j-1)+1;
-	     tempsd(i,j)=tempsd(i,j-1)+1;
-	   }
-	   else{
-	     resum =true;
-	        pos=pos-2;
-	     	     j=j-2;
-	   }
-	 }
-
-       }//end of first else	 
-        if(pos==0 && j==0 && tempsd(i-1,j)<splevels){
-	 tempsd(i,j)=tempsd(i-1,j)+1;
-       }
-       }//end of nsd else
-       
-
-   
-     }//end of j
-     //     tempsd.print();
-   }//end of nsd
-
-
-
-
-   return;
-}
+   }
 
 void onebody(rowvec wf,mat sd, int nsd, mat &hamilt, int &i){
   //int matxel=0; 
