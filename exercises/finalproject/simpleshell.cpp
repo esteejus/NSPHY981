@@ -13,7 +13,7 @@ void twobody(rowvec,mat,int,int,mat&,int&);
 
 int main(){
   
-  /*
+  
   mat a (3,4);
   a(0,0)=1;
   a(0,1)=2;
@@ -29,28 +29,44 @@ int main(){
   a(2,1)=4;
   a(2,2)=5;
   a(2,3)=6;
-  */
+  
+  /*
   mat a(2,2);
   a(0,0)=1;
   a(0,1)=2;
   a(1,0)=3;
   a(1,1)=4;
-  
+  */
+
   //a.print();
    
  int npart=4;
  int splevels=6;
- int  nsd=2;   
- mat hamilt(2,2);
+ int  nsd=3;   
+ mat hamilt(3,3);
   hamilt.zeros();
-mscheme(npart,0,splevels);
+  mscheme(npart,0,splevels);
   for(int i=0;i<nsd;i++){
-    //    rowvec wf = a.row(i);//wave function(SD) for bra
-    //    onebody(wf,a,nsd,hamilt,i);
-    //    twobody(wf,a,nsd,splevels,hamilt,i);
+       rowvec wf = a.row(i);//wave function(SD) for bra
+              onebody(wf,a,nsd,hamilt,i);
+       twobody(wf,a,nsd,splevels,hamilt,i);
 
   }  
-  
+    hamilt.print();
+
+  mat v = linspace<mat>(1,4,4);
+  /*
+  for(int k=0;k<nsd;k++){
+  for(int i=0;i<splevels;i++){
+    for(int j=0;j<4;j++){
+     
+      if(v(4-j)<splevels) v(4-j)+=1;
+
+    }
+  }
+  }
+  v.print();
+  */ 
   return 0 ;
   
 }
@@ -61,7 +77,7 @@ void mscheme(int npart,int mvalue,int splevels){
    mat tempsd(nsd,npart);//all slater determinents 
    int pos = npart-1;//position for switching particle positions
    tempsd.zeros(); 
-   
+   bool resum = false;
    for(int i=0;i<nsd;i++){
      for(int j=0;j<npart;j++){      
        
@@ -69,8 +85,15 @@ void mscheme(int npart,int mvalue,int splevels){
        if(i==0)tempsd(i,j)=j+1;//initial filling
        
        else{
-       if(j!=pos && pos!=0)tempsd(i,j)=tempsd(i-1,j);
-       else{
+       if(j!=pos)tempsd(i,j)=tempsd(i-1,j);
+       else if(j>pos && resum==true){
+	 tempsd(i,j)=tempsd(i,j-1)+1;
+	 if(j==npart){
+	   resum=false;
+	   pos=npart-1;
+	 }
+       }
+	 else{
 	 if(tempsd(i-1,j)<splevels)tempsd(i,j)=tempsd(i-1,j)+1;
 	 else{
 	   if(tempsd(i-1,j-1)+1!=tempsd(i-1,j)){
@@ -78,9 +101,9 @@ void mscheme(int npart,int mvalue,int splevels){
 	     tempsd(i,j)=tempsd(i,j-1)+1;
 	   }
 	   else{
-	 
-	        pos=pos-1;
-	     	     j=j-1;
+	     resum =true;
+	        pos=pos-2;
+	     	     j=j-2;
 	   }
 	 }
 
@@ -93,7 +116,7 @@ void mscheme(int npart,int mvalue,int splevels){
 
    
      }//end of j
-     tempsd.print();
+     //     tempsd.print();
    }//end of nsd
 
 
@@ -103,19 +126,33 @@ void mscheme(int npart,int mvalue,int splevels){
 }
 
 void onebody(rowvec wf,mat sd, int nsd, mat &hamilt, int &i){
-  int matxel=0; 
+  //int matxel=0; 
  
   for(int j=0;j<nsd;j++){
-    rowvec wf2 = sd.row(j);
-    if(equal(wf,wf2)==true)hamilt(i,j)=as_scalar(sum(wf));     
+    rowvec wf2 = sd.row(j);//bra vector
+    if(equal(wf,wf2)==true){//bra and ket test
+      for(int k=0;k<wf.n_elem-1;k++){//sum over sp states elem of vector
+	if((int)wf(k+1)%2==0){
+	  //here i count 2,4,6,8,... even levels
+	  //from them i evauluate p; p=level/2; as above 1,2,3,....
+	  //take 2*(p-1) where as_scalar(wf(k+1)) is p
+	  //the 2* is for both particles since 
+	  //i am only counting the even labels
+	  //	  hamilt(i,j)=hamilt(i,j)+2*(as_scalar(wf(k+1)/2-1));
+ 
+	}
       }
-  //  hamilt.print();
+    }
+  }
+ 
   return ;
-}
+  }
 
 
 void twobody(rowvec wf,mat sd, int nsd,int splevels, mat &hamilt, int &i){ 
-  rowvec temp(4);//temp wf for calculating matrix elements
+  int me=-2;//matrix element
+  
+rowvec temp(wf.n_elem);//temp wf for calculating matrix elements
     
     for(int j=0;j<nsd;j++){
       rowvec wf2=sd.row(j);
@@ -138,12 +175,12 @@ void twobody(rowvec wf,mat sd, int nsd,int splevels, mat &hamilt, int &i){
 		//since the program will not be able to find a SD with |3434> by construction, then the matrix element will be zero as given element wise by the equal function
 		temp(r)=p;
 		temp(r+1)=p+1;
-		if(equal(temp,wf2)==true)hamilt(i,j)+=2;
+		if(equal(temp,wf2)==true)hamilt(i,j)+=me;
 
 		//		cout<<"After"<<endl;
 		//temp.print();
-		hamilt.print();
-		cout<<endl<<endl;
+		//		hamilt.print();
+		//cout<<endl<<endl;
 	      }
 	    }
 	  }	  
@@ -154,11 +191,12 @@ void twobody(rowvec wf,mat sd, int nsd,int splevels, mat &hamilt, int &i){
 }
 
   bool equal(rowvec wf, rowvec wf2){
+    bool flag=true;
     if(wf.n_elem!=wf2.n_elem)cout<<"Num elements not equal"<<endl; 
-    for(int i=0;i<wf.n_elem;i++)
-      if(wf(i)==wf2(i))return true;
-      else return false;
-
+    for(int i=0;i<wf.n_elem;i++){
+      if(wf(i)!=wf2(i)) flag=false;
+    }
+    return flag;
   }
 
 //barrowed from online
