@@ -1,0 +1,1 @@
+g++ simpleshell.cpp -o shell -O2 -I /home/blah/armadillo-4.650.2/ include -DARMA_DONT_USER_WRAPPER -lblas -llapack
