@@ -51,7 +51,7 @@ void mscheme(int npart,int &nsd,int splevels, mat &tempsd){
  tempsd.zeros(); 
  combinationUtil(arr,data,0,splevels-1,0,npart,nsd,sd,z,tempsd); 
  //sd.print(); 
- tempsd.print();
+ // tempsd.print();
  
 
 } 
@@ -71,32 +71,33 @@ void combinationUtil(int arr[], int data[], int start, int end, int index, int r
 	     
 	     
 	     for (int j=0; j<r; j++){
-	     
-	       if((j+1)%2==0 && data[j]==data[j-1]+1 && data[j]%2==0){
+	       
+	       //if((j+1)%2==0 && data[j]==data[j-1]+1 && data[j]%2==0){
 		 sd(j)=data[j];
-		 sd(j-1)=data[j-1];
-		 // cout<<"counter"<<counter<<endl;
-	       }
-	       else if((j+1)%2 && !(data[j]==data[j-1]+1)){
-		 sd.zeros();
-	       }
+		 //sd(j-1)=data[j-1];
+		 //}	 // cout<<"counter"<<counter<<endl;
+		 // }
+	       //else if((j+1)%2 && (data[j]!=data[j-1]+1)){
+		  //if(data[j]==2 && data[j-1]==1)cout<<j<<endl;
+		  //sd.zeros();
+		 }
 	       int product=1;
 	       for(int l=0;l<r;l++){
 		 product=sd(l)*product;
 	       }
-		 if(product!=0){
-		   counter++;
-		   tempwf.insert_rows(counter-1,sd);
+	       //	 if(product!=0){
+	       //  counter++;
+	       //	   tempwf.insert_rows(counter-1,sd);
 		   //	   sd.print();
-		 }
+		   //}
 	       
-	     }
+	   
 	     
 	     //printf("\n");
 	     sd.print();
 	     return;
-	   }	 
-     }
+	   }
+   }
      
      // replace index with all possible elements. The condition
      // "end-i+1 >= r-index" makes sure that including one element
