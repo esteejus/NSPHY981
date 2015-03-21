@@ -1,0 +1,1 @@
+g++ `root-config --libs --cflags` -L/user/local/lib/root -o bayes bayesfit.c++

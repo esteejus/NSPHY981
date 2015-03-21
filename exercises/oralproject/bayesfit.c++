@@ -3,13 +3,26 @@
 #include <fstream>
 #include <iostream>
 
+
+#include <TFile.h>
+#include <TH1D.h>
+#include <TF1.h>
+#include <TCanvas.h>
+#include <TMath.h>
+
+#include <BAT/BCLog.h>
+#include <BAT/BCAux.h>
+
+
 using namespace std;
 
 void newmatrixelements();
 
 int main(){
+
+  /*Uncomment for nushellxscript
   int stat=-999;//status of the script
-  stat=system("./test.sh");//execute script 
+  //  stat=system("./test.sh");//execute script 
   if(stat==0){
     //script finished successfully 
     
@@ -20,6 +33,11 @@ int main(){
       cout<<"System status "<<stat<<endl;
     
   }
+  */
+
+
+
+  
   //newmatrixelements();
   
 
